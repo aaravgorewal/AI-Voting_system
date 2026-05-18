@@ -51,3 +51,17 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     next(error);
   }
 };
+
+export const getMe = async (req: any, res: Response, next: NextFunction) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(404);
+      throw new Error('User not found');
+    }
+  } catch (error) {
+    next(error);
+  }
+};
