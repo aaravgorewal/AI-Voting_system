@@ -4,6 +4,7 @@ import cors from 'cors';
 import { connectDB } from './config/db';
 import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/authRoutes';
+import electionRoutes from './routes/electionRoutes';
 
 // Load env vars
 dotenv.config();
