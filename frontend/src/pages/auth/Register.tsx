@@ -1,7 +1,44 @@
-import { Link } from 'react-router-dom';
-import { ShieldCheck } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShieldCheck, Loader2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
+import toast from 'react-hot-toast';
 
 export default function Register() {
+  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', password: '' });
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+      return toast.error('Please fill in all fields');
+    }
+
+    setIsLoading(true);
+    try {
+      const payload = {
+        fullName: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        password: formData.password
+      };
+      const { data } = await api.post('/auth/register', payload);
+      login(data.token, data);
+      toast.success('Registration successful!');
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error.response?.data?.errors?.[0]?.message || 'Registration failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   return (
     <div className="flex-1 flex items-center justify-center relative px-4 py-12">
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-accent/20 blur-[100px] rounded-full" />
@@ -17,30 +54,30 @@ export default function Register() {
           </p>
         </div>
 
-        <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">First Name</label>
-              <input type="text" className="w-full px-4 py-3 rounded-lg bg-background border border-white/10 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none text-white placeholder:text-gray-600" placeholder="John" />
+              <input name="firstName" value={formData.firstName} onChange={handleChange} type="text" className="w-full px-4 py-3 rounded-lg bg-background border border-white/10 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none text-white placeholder:text-gray-600" placeholder="John" />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">Last Name</label>
-              <input type="text" className="w-full px-4 py-3 rounded-lg bg-background border border-white/10 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none text-white placeholder:text-gray-600" placeholder="Doe" />
+              <input name="lastName" value={formData.lastName} onChange={handleChange} type="text" className="w-full px-4 py-3 rounded-lg bg-background border border-white/10 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none text-white placeholder:text-gray-600" placeholder="Doe" />
             </div>
           </div>
           
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Email Address</label>
-            <input type="email" className="w-full px-4 py-3 rounded-lg bg-background border border-white/10 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none text-white placeholder:text-gray-600" placeholder="voter@example.com" />
+            <input name="email" value={formData.email} onChange={handleChange} type="email" className="w-full px-4 py-3 rounded-lg bg-background border border-white/10 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none text-white placeholder:text-gray-600" placeholder="voter@example.com" />
           </div>
           
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Password</label>
-            <input type="password" className="w-full px-4 py-3 rounded-lg bg-background border border-white/10 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none text-white placeholder:text-gray-600" placeholder="••••••••" />
+            <input name="password" value={formData.password} onChange={handleChange} type="password" className="w-full px-4 py-3 rounded-lg bg-background border border-white/10 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none text-white placeholder:text-gray-600" placeholder="••••••••" />
           </div>
 
-          <button className="w-full py-3 mt-4 rounded-lg bg-primary-600 hover:bg-primary-500 text-white font-semibold transition-colors shadow-[0_0_15px_rgba(79,70,229,0.3)]">
-            Complete Registration
+          <button disabled={isLoading} className="w-full flex justify-center items-center gap-2 py-3 mt-4 rounded-lg bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white font-semibold transition-colors shadow-[0_0_15px_rgba(79,70,229,0.3)]">
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Complete Registration'}
           </button>
         </form>
 

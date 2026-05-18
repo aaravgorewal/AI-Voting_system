@@ -1,7 +1,37 @@
-import { Link } from 'react-router-dom';
-import { Fingerprint } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Fingerprint, Loader2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
+import toast from 'react-hot-toast';
 
 export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from?.pathname || '/dashboard';
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return toast.error('Please fill in all fields');
+
+    setIsLoading(true);
+    try {
+      const { data } = await api.post('/auth/login', { email, password });
+      login(data.token, data);
+      toast.success('Login successful');
+      navigate(from, { replace: true });
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error.response?.data?.errors?.[0]?.message || 'Invalid credentials');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex-1 flex items-center justify-center relative px-4 py-12">
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-600/20 blur-[100px] rounded-full" />
@@ -15,11 +45,13 @@ export default function Login() {
           <p className="text-gray-400 text-sm mt-2">Sign in to cast your secure vote</p>
         </div>
 
-        <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Email Address</label>
             <input 
               type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 rounded-lg bg-background border border-white/10 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none transition-colors text-white placeholder:text-gray-600"
               placeholder="voter@example.com"
             />
@@ -29,13 +61,18 @@ export default function Login() {
             <label className="text-sm font-medium text-gray-300">Password</label>
             <input 
               type="password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 rounded-lg bg-background border border-white/10 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none transition-colors text-white placeholder:text-gray-600"
               placeholder="••••••••"
             />
           </div>
 
-          <button className="w-full py-3 rounded-lg bg-primary-600 hover:bg-primary-500 text-white font-semibold transition-colors shadow-[0_0_15px_rgba(79,70,229,0.3)]">
-            Sign In
+          <button 
+            disabled={isLoading}
+            className="w-full py-3 rounded-lg flex justify-center items-center gap-2 bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white font-semibold transition-colors shadow-[0_0_15px_rgba(79,70,229,0.3)]"
+          >
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
           </button>
         </form>
 
