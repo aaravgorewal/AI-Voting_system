@@ -5,6 +5,7 @@ import { connectDB } from './config/db';
 import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/authRoutes';
 import electionRoutes from './routes/electionRoutes';
+import voteRoutes from './routes/voteRoutes';
 
 // Load env vars
 dotenv.config();
