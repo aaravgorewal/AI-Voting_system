@@ -25,6 +25,7 @@ app.get('/', (req: Request, res: Response) => {
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/elections', electionRoutes);
 
 // Error Handling Middleware
 app.use(errorHandler);
