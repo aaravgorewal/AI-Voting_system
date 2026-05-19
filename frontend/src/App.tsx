@@ -14,6 +14,7 @@ import ElectionsPage from './pages/admin/ElectionsPage';
 import CandidatesPage from './pages/admin/CandidatesPage';
 import UsersPage from './pages/admin/UsersPage';
 import AnalyticsPage from './pages/admin/AnalyticsPage';
+import LiveResults from './pages/elections/LiveResults';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/elections/:id/live" element={<LiveResults />} />
             </Route>
           </Route>
 
