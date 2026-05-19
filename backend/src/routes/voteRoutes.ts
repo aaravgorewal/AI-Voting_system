@@ -4,12 +4,20 @@ import { protect } from '../middlewares/authMiddleware';
 import { validateRequest } from '../middlewares/validateRequest';
 import { castVoteSchema } from '../validators/voteValidators';
 
+import { requireFaceVerification, upload } from '../middlewares/faceVerification';
+
 const router = express.Router();
 
 // All vote routes require authentication
 router.use(protect);
 
-router.post('/cast', validateRequest(castVoteSchema), castVote);
+router.post(
+  '/cast',
+  upload.single('face_image'),
+  requireFaceVerification,
+  validateRequest(castVoteSchema),
+  castVote
+);
 router.get('/my-history', getMyVotingHistory);
 router.get('/status/:electionId', checkVoteStatus);
 
