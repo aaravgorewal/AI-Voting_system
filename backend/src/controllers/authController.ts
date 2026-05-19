@@ -65,3 +65,34 @@ export const getMe = async (req: any, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+
+import { extractFaceEncoding } from '../services/aiService';
+
+export const registerFace = async (req: any, res: Response, next: NextFunction) => {
+  try {
+    if (!req.file) {
+      res.status(400);
+      throw new Error('Face image is required.');
+    }
+
+    const encoding = await extractFaceEncoding(req.file.buffer, req.file.originalname);
+    
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found.');
+    }
+
+    user.faceEncoding = encoding;
+    user.faceRecognitionImage = req.file.originalname;
+    user.isVerified = true; 
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Face registered successfully.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
