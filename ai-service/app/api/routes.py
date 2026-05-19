@@ -1,9 +1,51 @@
 from flask import Blueprint, request, jsonify
 from app.services.face_service import FaceRecognitionService
+from app.services.fraud_service import fraud_service_instance
 import json
 import numpy as np
 
 api_bp = Blueprint('api', __name__)
+
+@api_bp.route('/detect-fraud', methods=['POST'])
+def detect_fraud():
+    """
+    Endpoint to evaluate a vote for fraudulent patterns.
+    Expected JSON body:
+    {
+        "time_to_vote_seconds": 12.5,
+        "ip_vote_count_1h": 3,
+        "user_vote_count_24h": 1,
+        "is_known_proxy": 0
+    }
+    """
+    data = request.get_json()
+    if not data:
+        return jsonify({"success": False, "error": "No JSON payload provided"}), 400
+
+    try:
+        result = fraud_service_instance.analyze_vote(data)
+        return jsonify({
+            "success": True,
+            "data": result
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@api_bp.route('/train-fraud', methods=['POST'])
+def train_fraud():
+    """
+    Endpoint to trigger model training with new data.
+    Expected JSON body array of vote data objects.
+    """
+    data = request.get_json()
+    if not data or not isinstance(data, list):
+        return jsonify({"success": False, "error": "Expected a JSON array of training samples"}), 400
+
+    try:
+        result = fraud_service_instance.train_model(data)
+        return jsonify({"success": True, "data": result}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @api_bp.route('/health', methods=['GET'])
 def health_check():
