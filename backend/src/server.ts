@@ -1,13 +1,15 @@
+import http from 'http';
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { connectDB } from './config/db';
+import { initSocket } from './config/socket';
 import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/authRoutes';
 import electionRoutes from './routes/electionRoutes';
 import voteRoutes from './routes/voteRoutes';
 
-// Load env vars
+// Load env vars first
 dotenv.config();
 
 // Connect to database
@@ -16,24 +18,27 @@ connectDB();
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
 app.use(express.json());
 
-// Basic route
+// Health check route
 app.get('/', (req: Request, res: Response) => {
-  res.send('Voting AI API is running...');
+  res.json({ status: 'ok', message: 'Voting AI API is running...' });
 });
 
 // API Routes
-app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/auth',      authRoutes);
 app.use('/api/v1/elections', electionRoutes);
-app.use('/api/v1/votes', voteRoutes);
+app.use('/api/v1/votes',     voteRoutes);
 
-// Error Handling Middleware
+// Error Handling
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+// Create http server and attach socket.io
+const httpServer = http.createServer(app);
+initSocket(httpServer);
 
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+const PORT = process.env.PORT || 5000;
+httpServer.listen(PORT, () => {
+  console.log(`Server + Socket.io running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });

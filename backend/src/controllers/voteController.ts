@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import Vote from '../models/Vote';
 import Election from '../models/Election';
 import { AuthRequest } from '../middlewares/authMiddleware';
+import { emitVoteUpdate } from '../config/socket';
 
 // @desc   Cast a vote
 // @route  POST /api/v1/votes/cast
@@ -89,6 +90,21 @@ export const castVote = async (req: AuthRequest, res: Response, next: NextFuncti
     // Commit transaction
     await session.commitTransaction();
     session.endSession();
+
+    // Fetch updated election and emit real-time update to all clients in the room
+    const updatedElection = await Election.findById(electionId).select('candidates totalVotes title');
+    if (updatedElection) {
+      emitVoteUpdate(electionId, {
+        electionId,
+        totalVotes: updatedElection.totalVotes,
+        candidates: updatedElection.candidates.map(c => ({
+          candidateId: c._id,
+          name:        c.name,
+          party:       c.party,
+          voteCount:   c.voteCount,
+        })),
+      });
+    }
 
     res.status(201).json({
       success: true,
