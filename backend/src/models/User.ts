@@ -9,6 +9,7 @@ export interface IUser extends Document {
   role: 'user' | 'admin' | 'superadmin';
   profileImage?: string;
   faceRecognitionImage?: string;
+  faceEncoding?: number[];
   isVerified: boolean;
   matchPassword(enteredPassword: string): Promise<boolean>;
   getSignedJwtToken(): string;
@@ -50,6 +51,10 @@ const userSchema = new Schema<IUser>(
     },
     faceRecognitionImage: {
       type: String, // Path or URL to the encrypted reference image
+    },
+    faceEncoding: {
+      type: [Number], // Array of 128 floats for face recognition
+      select: false,  // Don't return by default
     },
     isVerified: {
       type: Boolean,
