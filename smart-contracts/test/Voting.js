@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import hre from "hardhat";
 
 describe("Voting Contract", function () {
   let Voting;
@@ -13,8 +13,8 @@ describe("Voting Contract", function () {
   const CANDIDATE_2_ID = "cand-2";
 
   beforeEach(async function () {
-    [owner, addr1, addr2] = await ethers.getSigners();
-    Voting = await ethers.getContractFactory("Voting");
+    [owner, addr1, addr2] = await hre.ethers.getSigners();
+    Voting = await hre.ethers.getContractFactory("Voting");
     voting = await Voting.deploy();
     await voting.waitForDeployment();
   });
